@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IdentityServer.Persistence;
 
-public class ApplicationDbContext: IdentityDbContext<ApplicationUser>
+public class ApplicationDbContext: IdentityDbContext<UserData, RoleData, Guid>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)

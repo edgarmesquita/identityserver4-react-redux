@@ -2,6 +2,6 @@
 
 namespace IdentityServer.Application.Models;
 
-public class ApplicationUser : IdentityUser
+public class UserData : IdentityUser<Guid>
 {
 }
