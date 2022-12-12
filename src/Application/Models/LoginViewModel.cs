@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace IdentityServer.Web.Models;
+﻿namespace IdentityServer.Application.Models;
 
 public class LoginViewModel : LoginInputModel
 {

@@ -1,45 +1,40 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Ardalis.ApiEndpoints;
+using IdentityServer.Application.Constants;
 using IdentityServer.Application.Models;
-using IdentityServer.Web.Constants;
-using IdentityServer.Web.Models;
+using IdentityServer.Application.Models.Data;
+using IdentityServer.Application.Services.Interfaces;
 using IdentityServer4.Events;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
-using IdentityServer4.Stores;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace IdentityServer.Web.Endpoints;
+namespace IdentityServer.Web.Endpoints.Account;
 
-public class AccountLoginEndpoint : EndpointBaseAsync.WithRequest<LoginInputModel>.WithActionResult
+public class SetLoginEndpoint : EndpointBaseAsync.WithRequest<LoginInputModel>.WithActionResult
 {
     private readonly UserManager<UserData> _userManager;
     private readonly SignInManager<UserData> _signInManager;
     private readonly IIdentityServerInteractionService _interaction;
-    private readonly IClientStore _clientStore;
-    private readonly IAuthenticationSchemeProvider _schemeProvider;
     private readonly IEventService _events;
+    private readonly ILoginService _loginService;
 
-    public AccountLoginEndpoint(
+    public SetLoginEndpoint(
         UserManager<UserData> userManager,
         SignInManager<UserData> signInManager,
         IIdentityServerInteractionService interaction,
-        IClientStore clientStore,
-        IAuthenticationSchemeProvider schemeProvider,
-        IEventService events)
+        IEventService events,
+        ILoginService loginService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _interaction = interaction;
-        _clientStore = clientStore;
-        _schemeProvider = schemeProvider;
         _events = events;
+        _loginService = loginService;
     }
 
     [AllowAnonymous]
@@ -102,73 +97,9 @@ public class AccountLoginEndpoint : EndpointBaseAsync.WithRequest<LoginInputMode
         }
 
         // something went wrong, show form with error
-        var vm = await BuildLoginViewModelAsync(request);
+        var vm = await _loginService.BuildLoginViewModelAsync(request);
         return BadRequest(vm);
     }
     
-    private async Task<LoginViewModel> BuildLoginViewModelAsync(LoginInputModel model)
-    {
-        var vm = await BuildLoginViewModelAsync(model.ReturnUrl);
-        vm.Username = model.Username;
-        vm.RememberLogin = model.RememberLogin;
-        return vm;
-    }
     
-    private async Task<LoginViewModel> BuildLoginViewModelAsync(string returnUrl)
-        {
-            var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
-            if (context?.IdP != null && await _schemeProvider.GetSchemeAsync(context.IdP) != null)
-            {
-                var local = context.IdP == IdentityServer4.IdentityServerConstants.LocalIdentityProvider;
-
-                // this is meant to short circuit the UI and only trigger the one external IdP
-                var vm = new LoginViewModel
-                {
-                    EnableLocalLogin = local,
-                    ReturnUrl = returnUrl,
-                    Username = context?.LoginHint,
-                };
-
-                if (!local)
-                {
-                    vm.ExternalProviders = new[] { new ExternalProvider { AuthenticationScheme = context.IdP } };
-                }
-
-                return vm;
-            }
-
-            var schemes = await _schemeProvider.GetAllSchemesAsync();
-
-            var providers = schemes
-                .Where(x => x.DisplayName != null)
-                .Select(x => new ExternalProvider
-                {
-                    DisplayName = x.DisplayName ?? x.Name,
-                    AuthenticationScheme = x.Name
-                }).ToList();
-
-            var allowLocal = true;
-            if (context?.Client.ClientId != null)
-            {
-                var client = await _clientStore.FindEnabledClientByIdAsync(context.Client.ClientId);
-                if (client != null)
-                {
-                    allowLocal = client.EnableLocalLogin;
-
-                    if (client.IdentityProviderRestrictions != null && client.IdentityProviderRestrictions.Any())
-                    {
-                        providers = providers.Where(provider => client.IdentityProviderRestrictions.Contains(provider.AuthenticationScheme)).ToList();
-                    }
-                }
-            }
-
-            return new LoginViewModel
-            {
-                AllowRememberLogin = AccountOptions.AllowRememberLogin,
-                EnableLocalLogin = allowLocal && AccountOptions.AllowLocalLogin,
-                ReturnUrl = returnUrl,
-                Username = context?.LoginHint,
-                ExternalProviders = providers.ToArray()
-            };
-        }
 }

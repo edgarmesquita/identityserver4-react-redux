@@ -1,8 +1,6 @@
-﻿using System;
+﻿namespace IdentityServer.Application.Constants;
 
-namespace IdentityServer.Web.Constants;
-
-public class AccountOptions
+public static class AccountOptions
 {
     public static bool AllowLocalLogin = true;
     public static bool AllowRememberLogin = true;

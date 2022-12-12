@@ -1,7 +1,6 @@
-﻿using System;
-using IdentityServer4.Models;
+﻿using IdentityServer4.Models;
 
-namespace IdentityServer.Web.Extensions;
+namespace IdentityServer.Application.Extensions;
 
 public static class AuthorizationRequestExtensions
 {

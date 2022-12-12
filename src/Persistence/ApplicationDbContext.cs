@@ -1,4 +1,5 @@
 using IdentityServer.Application.Models;
+using IdentityServer.Application.Models.Data;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 

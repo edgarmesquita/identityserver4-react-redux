@@ -1,4 +1,4 @@
-﻿namespace IdentityServer.Web.Models;
+﻿namespace IdentityServer.Application.Models;
 
 public class ExternalProvider
 {

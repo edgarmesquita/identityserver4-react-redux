@@ -1,5 +1,6 @@
 using System;
 using IdentityServer.Application.Models;
+using IdentityServer.Application.Models.Data;
 using IdentityServer.Persistence;
 using IdentityServer4;
 using Microsoft.AspNetCore.Builder;
