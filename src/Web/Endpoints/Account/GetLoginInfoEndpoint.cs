@@ -17,6 +17,7 @@ public class GetLoginInfoEndpoint : EndpointBaseAsync.WithRequest<string>.WithAc
         _loginService = loginService;
     }
     
+    [HttpGet("account/login")]
     public override async Task<ActionResult> HandleAsync([FromQuery] string returnUrl, CancellationToken cancellationToken = new())
     {
         // build a model so we know what to show on the login page

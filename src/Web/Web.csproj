@@ -10,6 +10,7 @@
     <AssemblyName>IdentityServer.Web</AssemblyName>
     <RootNamespace>IdentityServer.Web</RootNamespace>
     <LangVersion>latest</LangVersion>
+    <UserSecretsId>674c4523-1eff-48aa-8bde-c16b7665914f</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
