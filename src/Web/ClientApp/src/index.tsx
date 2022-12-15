@@ -7,6 +7,8 @@ import App from './App';
 import registerServiceWorker from './registerServiceWorker';
 import {CssBaseline} from "@mui/material";
 
+import './styles/main.css';
+
 // Get the application-wide store instance, prepopulating with state from the server where available.
 const container = document.getElementById('root');
 const root = createRoot(container!);
