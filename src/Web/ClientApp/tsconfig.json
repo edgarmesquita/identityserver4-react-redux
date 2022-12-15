@@ -14,9 +14,12 @@
     "jsx": "preserve",
     "lib": [
       "es2015",
-      "dom"
+      "dom",
+      "dom.iterable"
     ],
-    "skipLibCheck": false
+    "skipLibCheck": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": [
     "src"

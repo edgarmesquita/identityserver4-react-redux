@@ -1,16 +1,19 @@
 import * as React from 'react';
-import { Container } from 'reactstrap';
 import NavMenu from './NavMenu';
+import {ReactNode} from "react";
+import {Container} from "@mui/material";
 
-export default class Layout extends React.PureComponent<{}, { children?: React.ReactNode }> {
-    public render() {
-        return (
-            <React.Fragment>
-                <NavMenu />
-                <Container>
-                    {this.props.children}
-                </Container>
-            </React.Fragment>
-        );
-    }
+interface ILayoutProps {
+    children?: ReactNode;
 }
+const Layout : React.FC<ILayoutProps> = ({children}: ILayoutProps) => {
+    return (
+        <React.Fragment>
+            <NavMenu />
+            <Container>
+                {children}
+            </Container>
+        </React.Fragment>
+    );
+}
+export default Layout;
