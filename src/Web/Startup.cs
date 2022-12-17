@@ -1,4 +1,5 @@
 using System;
+using IdentityServer.Application.Extensions;
 using IdentityServer.Application.Models;
 using IdentityServer.Application.Models.Data;
 using IdentityServer.Persistence;
@@ -79,6 +80,8 @@ public class Startup
         {
             configuration.RootPath = "ClientApp/build";
         });
+
+        services.AddApplication();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

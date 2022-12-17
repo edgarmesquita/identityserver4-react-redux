@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit'
 import counter from './counter';
+import login from './login/slice';
 export const store = configureStore({
     reducer: {
-        counter
-    },
+        counter,
+        login
+    }
 })
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
