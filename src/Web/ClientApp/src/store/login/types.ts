@@ -10,6 +10,8 @@ export interface ILoginResult {
     isExternalLoginOnly: boolean;
     externalLoginScheme: string;
     returnUrl?: string;
+
+    rememberLogin?: boolean
 }
 
 export interface ILoginState

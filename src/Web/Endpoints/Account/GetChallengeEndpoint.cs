@@ -5,6 +5,7 @@ using Ardalis.ApiEndpoints;
 using IdentityServer.Application.Models;
 using IdentityServer4.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IdentityServer.Web.Endpoints.Account;
@@ -18,6 +19,7 @@ public class GetChallengeEndpoint: EndpointBaseAsync.WithRequest<ChallengeInputM
         _interaction = interaction;
     }
     
+    [AllowAnonymous]
     [HttpGet("external/challenge", Name = nameof(GetChallengeEndpoint))]
     public override Task<ActionResult> HandleAsync(ChallengeInputModel request, CancellationToken cancellationToken = new())
     {

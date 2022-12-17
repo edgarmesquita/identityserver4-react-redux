@@ -6,12 +6,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ardalis.ApiEndpoints;
 using IdentityModel;
+using IdentityServer.Application.Extensions;
 using IdentityServer.Application.Models;
 using IdentityServer.Application.Models.Data;
+using IdentityServer.Web.Extensions;
 using IdentityServer4;
 using IdentityServer4.Events;
 using IdentityServer4.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -41,6 +44,7 @@ public class GetCallbackEndpoint : EndpointBaseAsync.WithoutRequest.WithActionRe
         _logger = logger;
     }
 
+    [AllowAnonymous]
     [HttpGet("external/callback", Name = nameof(GetCallbackEndpoint))]
     public override async Task<ActionResult> HandleAsync(CancellationToken cancellationToken = new())
     {
@@ -101,7 +105,12 @@ public class GetCallbackEndpoint : EndpointBaseAsync.WithoutRequest.WithActionRe
         await _events.RaiseAsync(new UserLoginSuccessEvent(provider, providerUserId, user.Id.ToString(), name, true,
             context?.Client.ClientId));
 
-        return Ok(new RedirectViewModel { RedirectUrl = returnUrl });
+        if (context == null) 
+            return Redirect(returnUrl);
+        return context.IsNativeClient() ?
+            // The client is native, so this change in how to
+            // return the response is for better UX for the end user.
+            this.LoadingPage("redirect", returnUrl) : Redirect(returnUrl);
     }
 
     private async Task<(UserData user, string provider, string providerUserId, IEnumerable<Claim> claims)>

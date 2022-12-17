@@ -117,9 +117,10 @@ public class Startup
         app.UseSpa(spa =>
         {
             spa.Options.SourcePath = "ClientApp";
-
+            
             if (env.IsDevelopment())
             {
+                //spa.UseProxyToSpaDevelopmentServer("http://localhost:3000");
                 spa.UseReactDevelopmentServer(npmScript: "start");
             }
         });

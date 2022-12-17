@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {
+    Alert, AlertTitle,
     Box,
     Button,
     CardContent,
@@ -17,6 +18,8 @@ import {getInfoState, getLogin} from "../store/login/slice";
 import {
     Link as RouterLink,
 } from 'react-router-dom';
+import {useQuery} from "../hooks/router";
+import ExternalLoginButton from "../components/ExternalLoginButton";
 interface IUserForm {
     username?: string;
     password?: string;
@@ -43,18 +46,26 @@ class UserValidator extends Validator<IUserForm> {
 }
 
 const Home = () => {
-    const [form, setForm] = React.useState<IUserForm>({});
-    const [validate, userFormErrors] = useValidator(new UserValidator());
     const loginInfo = useAppSelector(getInfoState);
+    const [form, setForm] = React.useState<IUserForm>({
+        rememberLogin: loginInfo?.rememberLogin
+    });
+    const [validate, userFormErrors] = useValidator(new UserValidator());
+    
     const dispatch = useAppDispatch();
-
+    let query = useQuery();
     const handleChange = (field: keyof IUserForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
         const newState = {...form, [field]: event.target.value};
         setForm(newState);
     };
 
+    const handleCheckboxChange = (field: keyof IUserForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newState = {...form, [field]: event.target.checked};
+        setForm(newState);
+    };
+    
     const loadInfo = () => {
-        dispatch(getLogin("/"));
+        dispatch(getLogin(query.get("returnUrl") || "/"));
     }
     
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -70,7 +81,7 @@ const Home = () => {
     return (
         <Layout>
             <CardContent>
-                <Typography variant={"h4"}>IdentityServer 4 With React</Typography>
+                <Typography variant={"h4"} gutterBottom>Login</Typography>
 
                 {!loginInfo && (
                     <Box sx={{ display: 'flex' }}>
@@ -108,7 +119,7 @@ const Home = () => {
                             <FormControlLabel name="rememberLogin" 
                                               sx={{my: 1}}
                                               value="true"
-                                              control={<Checkbox/>}
+                                              control={<Checkbox checked={form.rememberLogin || false} onChange={handleCheckboxChange("rememberLogin")}/>}
                                               label={<Typography variant="body2">Remember me.</Typography>}
                                               labelPlacement="end"
                             />
@@ -125,16 +136,19 @@ const Home = () => {
                 {loginInfo?.visibleExternalProviders != null && loginInfo.visibleExternalProviders.length > 0 && (
                     <>
                         {loginInfo.visibleExternalProviders.map(o => (
-                            <Button component={RouterLink} 
-                                    to={`external/challenge?scheme=${o.authenticationScheme}&returnUrl=${loginInfo.returnUrl}`}
-                                    type="submit" 
-                                    variant="contained" 
-                                    size="large" 
-                                    fullWidth sx={{mt: 2}}>
-                                {o.displayName}
-                            </Button>
+                            <ExternalLoginButton
+                                key={o.authenticationScheme}
+                                scheme={o.authenticationScheme} 
+                                displayName={o.displayName} 
+                                returnUrl={loginInfo?.returnUrl} />
                         ))}
                     </>
+                )}
+                {loginInfo && !loginInfo.enableLocalLogin && loginInfo.visibleExternalProviders.length === 0 && (
+                    <Alert severity="warning">
+                        <AlertTitle>Invalid login request</AlertTitle>
+                        There are no login schemes configured for this request.
+                    </Alert>
                 )}
             </CardContent>
         </Layout>
