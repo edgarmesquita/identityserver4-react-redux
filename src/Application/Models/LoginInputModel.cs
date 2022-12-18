@@ -12,7 +12,7 @@ public class LoginInputModel
     
     public bool RememberLogin { get; set; }
     
-    public string ReturnUrl { get; set; }
+    public string? ReturnUrl { get; set; }
     
     public bool Accept { get; set; } = true;
 }

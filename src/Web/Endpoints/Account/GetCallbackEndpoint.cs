@@ -9,6 +9,7 @@ using IdentityModel;
 using IdentityServer.Application.Extensions;
 using IdentityServer.Application.Models;
 using IdentityServer.Application.Models.Data;
+using IdentityServer.Web.Attributes;
 using IdentityServer.Web.Extensions;
 using IdentityServer4;
 using IdentityServer4.Events;
@@ -44,6 +45,7 @@ public class GetCallbackEndpoint : EndpointBaseAsync.WithoutRequest.WithActionRe
         _logger = logger;
     }
 
+    [SecurityHeaders]
     [AllowAnonymous]
     [HttpGet("external/callback", Name = nameof(GetCallbackEndpoint))]
     public override async Task<ActionResult> HandleAsync(CancellationToken cancellationToken = new())

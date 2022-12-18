@@ -1,11 +1,8 @@
 import * as React from 'react';
-import {
-    Link as RouterLink,
-} from 'react-router-dom';
 import {Button, useTheme} from "@mui/material";
 import {FaFacebook} from "react-icons/fa";
 import {FcGoogle} from "react-icons/fc";
-
+import {darken} from "@mui/material";
 interface IExternalLoginButtonProps {
     scheme: string;
     displayName: string;
@@ -14,16 +11,17 @@ interface IExternalLoginButtonProps {
 
 const schemes = [
     {name: "Google", color: "#FFF", icon: FcGoogle},
-    {name: "Facebook", color: "", icon: FaFacebook}
+    {name: "Facebook", color: "#4267B2", icon: FaFacebook}
 ]
 const ExternalLoginButton = ({scheme, displayName, returnUrl}: IExternalLoginButtonProps) => {
     const schemeInfo = schemes.find(o => o.name === scheme)!;
     const theme = useTheme();
     let url = `/external/challenge?scheme=${scheme}`;
-    if(returnUrl)
-    {
+    if (returnUrl) {
         url += `&returnUrl=${encodeURIComponent(returnUrl)}`;
     }
+    const bgColorHover = darken(schemeInfo.color, .1);
+    const borderColorHover = darken(schemeInfo.color, .2);
     return (
         <Button startIcon={<schemeInfo.icon/>}
                 href={url}
@@ -33,18 +31,18 @@ const ExternalLoginButton = ({scheme, displayName, returnUrl}: IExternalLoginBut
                 fullWidth sx={{
                     mt: 2,
                     backgroundColor: schemeInfo.color,
-                    borderColor: '#CCC',
-                    color: theme.palette.text.primary,
+                    borderColor: bgColorHover,
+                    color: theme.palette.getContrastText(schemeInfo.color),
                     '&:hover': {
-                        backgroundColor: '#DDD',
-                        borderColor: '#BBB',
+                        backgroundColor: bgColorHover,
+                        borderColor: borderColorHover,
                     },
                     '&:active': {
-                        backgroundColor: '#DDD',
-                        borderColor: '#BBB',
+                        backgroundColor: bgColorHover,
+                        borderColor: borderColorHover,
                     },
                 }}>
-            {displayName}
+            Sign In with {displayName}
         </Button>
     );
 }

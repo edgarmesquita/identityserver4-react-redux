@@ -3,9 +3,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ardalis.ApiEndpoints;
 using IdentityServer.Application.Constants;
+using IdentityServer.Application.Extensions;
 using IdentityServer.Application.Models;
 using IdentityServer.Application.Models.Data;
 using IdentityServer.Application.Services.Interfaces;
+using IdentityServer.Web.Extensions;
 using IdentityServer4.Events;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
@@ -39,7 +41,7 @@ public class SetLoginEndpoint : EndpointBaseAsync.WithRequest<LoginInputModel>.W
 
     [AllowAnonymous]
     [HttpPost("account/login")]
-    public override async Task<ActionResult> HandleAsync(LoginInputModel request,
+    public override async Task<ActionResult> HandleAsync([FromBody] LoginInputModel request,
         CancellationToken cancellationToken = new())
     {
         // check if we are in the context of an authorization request
@@ -56,8 +58,13 @@ public class SetLoginEndpoint : EndpointBaseAsync.WithRequest<LoginInputModel>.W
             // denied the consent (even if this client does not require consent).
             // this will send back an access denied OIDC error response to the client.
             await _interaction.DenyAuthorizationAsync(context, AuthorizationError.AccessDenied);
-                
-            return Ok(new RedirectViewModel { RedirectUrl = request.ReturnUrl });
+
+            return Ok(new RedirectViewModel
+            {
+                RedirectUrl = context.IsNativeClient() ? 
+                    Url.Content($"~/redirect?returnUrl={request.ReturnUrl}") : 
+                    request.ReturnUrl
+            });
         }
 
         if (ModelState.IsValid)
@@ -73,7 +80,12 @@ public class SetLoginEndpoint : EndpointBaseAsync.WithRequest<LoginInputModel>.W
                 if (context != null)
                 {
                     // we can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
-                    return Ok(new RedirectViewModel { RedirectUrl = request.ReturnUrl });
+                    return Ok(new RedirectViewModel
+                    {
+                        RedirectUrl = context.IsNativeClient() ? 
+                            Url.Content($"~/redirect?returnUrl={request.ReturnUrl}") : 
+                            request.ReturnUrl
+                    });
                 }
 
                 // request for a local page
@@ -100,6 +112,4 @@ public class SetLoginEndpoint : EndpointBaseAsync.WithRequest<LoginInputModel>.W
         var vm = await _loginService.BuildLoginViewModelAsync(request);
         return BadRequest(vm);
     }
-    
-    
 }

@@ -73,6 +73,12 @@ public class Startup
                 // set the redirect URI to https://localhost:5001/signin-google
                 options.ClientId = "copy client ID from Google here";
                 options.ClientSecret = "copy client secret from Google here";
+            })
+            .AddFacebook(options =>
+            {
+                options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
+                options.AppId = "99999999999999999";
+                options.AppSecret = "copy app secret from Facebook here";
             });
         
         // In production, the React files will be served from this directory

@@ -6,7 +6,7 @@ import {
     CardContent,
     Checkbox,
     CircularProgress,
-    FormControlLabel,
+    FormControlLabel, Link, Snackbar, Stack,
     TextField,
     Typography
 } from "@mui/material";
@@ -16,15 +16,21 @@ import {Validator} from "fluentvalidation-ts";
 import {useAppDispatch, useAppSelector} from "../hooks/store";
 import {getInfoState, getLogin} from "../store/login/slice";
 import {
-    Link as RouterLink,
+    redirect,
+    Link as RouterLink
 } from 'react-router-dom';
 import {useQuery} from "../hooks/router";
 import ExternalLoginButton from "../components/ExternalLoginButton";
+
 interface IUserForm {
     username?: string;
     password?: string;
     rememberLogin?: boolean;
     returnUrl?: string;
+}
+
+interface IRedirectResponse {
+    returnUrl: string;
 }
 
 class UserValidator extends Validator<IUserForm> {
@@ -48,12 +54,26 @@ class UserValidator extends Validator<IUserForm> {
 const Home = () => {
     const loginInfo = useAppSelector(getInfoState);
     const [form, setForm] = React.useState<IUserForm>({
-        rememberLogin: loginInfo?.rememberLogin
+        rememberLogin: loginInfo?.rememberLogin,
+        returnUrl: loginInfo?.returnUrl
     });
     const [validate, userFormErrors] = useValidator(new UserValidator());
-    
+    const [open, setOpen] = React.useState(false);
     const dispatch = useAppDispatch();
     let query = useQuery();
+
+    const handleClick = () => {
+        setOpen(true);
+    };
+
+    const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setOpen(false);
+    };
+
     const handleChange = (field: keyof IUserForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
         const newState = {...form, [field]: event.target.value};
         setForm(newState);
@@ -63,43 +83,60 @@ const Home = () => {
         const newState = {...form, [field]: event.target.checked};
         setForm(newState);
     };
-    
+
     const loadInfo = () => {
         dispatch(getLogin(query.get("returnUrl") || "/"));
     }
-    
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        if (validate(form))
-            event.preventDefault()
+
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!validate(form))
+            return;
+
+        console.log(event)
+        const response = await window.fetch('/account/login', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json;charset=UTF-8',
+            },
+            body: JSON.stringify(form)
+        });
+
+        if (!response.ok) {
+            setOpen(true);
+            return;
+        }
+        const data: IRedirectResponse = await response.json();
+        redirect(data.returnUrl);
     }
 
     React.useEffect(() => {
         loadInfo();
     }, []);
 
-    
     return (
         <Layout>
             <CardContent>
                 <Typography variant={"h4"} gutterBottom>Login</Typography>
 
                 {!loginInfo && (
-                    <Box sx={{ display: 'flex' }}>
-                        <CircularProgress />
+                    <Box sx={{display: 'flex'}}>
+                        <CircularProgress/>
                     </Box>
                 )}
                 {loginInfo?.enableLocalLogin && (
                     <form method={"POST"} action={"/account/login"} onSubmit={handleSubmit}>
+                        <input type="hidden" name="returnUrl" value={form.returnUrl}/>
                         <TextField
                             name="username"
                             label="E-mail"
                             value={form?.username || ''}
                             onChange={handleChange("username")}
                             helperText={'username' in userFormErrors ? userFormErrors.username : ''}
-                            variant="outlined" 
-                            margin="normal" 
-                            error={'username' in userFormErrors} 
-                            fullWidth 
+                            variant="outlined"
+                            margin="normal"
+                            error={'username' in userFormErrors}
+                            fullWidth
                             required
                         />
                         <TextField
@@ -108,29 +145,52 @@ const Home = () => {
                             value={form?.password || ''}
                             onChange={handleChange("password")}
                             helperText={'password' in userFormErrors ? userFormErrors.password : ''}
-                            variant="outlined" 
-                            margin="normal" 
-                            type="password" 
+                            variant="outlined"
+                            margin="normal"
+                            type="password"
                             error={'password' in userFormErrors}
                             fullWidth
                             required
                         />
                         {loginInfo?.allowRememberLogin && (
-                            <FormControlLabel name="rememberLogin" 
+                            <FormControlLabel name="rememberLogin"
                                               sx={{my: 1}}
                                               value="true"
-                                              control={<Checkbox checked={form.rememberLogin || false} onChange={handleCheckboxChange("rememberLogin")}/>}
+                                              control={<Checkbox checked={form.rememberLogin || false}
+                                                                 onChange={handleCheckboxChange("rememberLogin")}/>}
                                               label={<Typography variant="body2">Remember me.</Typography>}
                                               labelPlacement="end"
                             />
                         )}
-
-                        <Button type="submit" 
-                                variant="contained" 
-                                size="large" 
+                        <Link component={RouterLink} to="/forgot-password">
+                            Forgot password?
+                        </Link>
+                        <Button type="submit"
+                                variant="contained"
+                                size="large"
                                 fullWidth sx={{mt: 2}}>
                             Sign In
                         </Button>
+                        
+                        <Box sx={{
+                            display: 'flex', 
+                            alignItems: 'center',
+                            margin: '16px 0',
+                            '&::before': {
+                                backgroundColor: 'rgba(0,0,0,0.35)',
+                                content: "''",
+                                height: '1px',
+                                width: '50%'
+                            },
+                            '&::after': {
+                                backgroundColor: 'rgba(0,0,0,0.35)',
+                                content: "''",
+                                height: '1px',
+                                width: '50%'
+                            }
+                        }}>
+                            <Typography variant="caption" sx={{padding: '0 12px'}}>or</Typography>
+                        </Box>
                     </form>
                 )}
                 {loginInfo?.visibleExternalProviders != null && loginInfo.visibleExternalProviders.length > 0 && (
@@ -138,9 +198,9 @@ const Home = () => {
                         {loginInfo.visibleExternalProviders.map(o => (
                             <ExternalLoginButton
                                 key={o.authenticationScheme}
-                                scheme={o.authenticationScheme} 
-                                displayName={o.displayName} 
-                                returnUrl={loginInfo?.returnUrl} />
+                                scheme={o.authenticationScheme}
+                                displayName={o.displayName}
+                                returnUrl={loginInfo?.returnUrl}/>
                         ))}
                     </>
                 )}
@@ -151,6 +211,15 @@ const Home = () => {
                     </Alert>
                 )}
             </CardContent>
+
+            <Snackbar open={open}
+                      anchorOrigin={{vertical: 'top', horizontal: 'center'}}
+                      autoHideDuration={10000} onClose={handleClose}>
+                <Alert onClose={handleClose} severity="error" sx={{width: '100%'}}>
+                    One error has occurred!
+                </Alert>
+            </Snackbar>
+
         </Layout>
     );
 }
