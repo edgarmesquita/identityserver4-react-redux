@@ -2,7 +2,9 @@ using System;
 using IdentityServer.Application.Extensions;
 using IdentityServer.Application.Models;
 using IdentityServer.Application.Models.Data;
+using IdentityServer.Application.Models.Settings;
 using IdentityServer.Persistence;
+using IdentityServer.Persistence.Extensions;
 using IdentityServer4;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -27,22 +29,16 @@ public class Startup
     // This method gets called by the runtime. Use this method to add services to the container.
     public void ConfigureServices(IServiceCollection services)
     {
+        var settings = Configuration.Get<AppSettings>();
         services.AddControllersWithViews();
         
-        var serverVersion = new MySqlServerVersion(new Version(8, 0, 30));
-        services.AddDbContext<ApplicationDbContext>(opt =>
-            opt.UseMySql(Configuration.GetConnectionString("DefaultConnection")!, serverVersion, x =>
-            {
-                x.UseNetTopologySuite();
-                x.EnableRetryOnFailure(
-                    5,
-                    TimeSpan.FromSeconds(15),
-                    null
-                );
-            }));
+        services.AddDbContext<MainContext>(opt =>
+            opt.UseMainPersistence(Configuration, settings.Database));
+        services.AddDbContext<ConfigurationContext>(opt =>
+            opt.UseMainPersistence(Configuration, settings.Database));
         
         services.AddIdentity<UserData, RoleData>()
-            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddEntityFrameworkStores<MainContext>()
             .AddDefaultTokenProviders();
         
         var builder = services.AddIdentityServer(options =>
@@ -55,6 +51,10 @@ public class Startup
                 // see https://identityserver4.readthedocs.io/en/latest/topics/resources.html
                 options.EmitStaticAudienceClaim = true;
             })
+            .AddConfigurationStore<ConfigurationContext>(options => options.ResolveDbContextOptions = (provider, optionsBuilder) => 
+                optionsBuilder.UseMainPersistence(Configuration, settings.Database))
+            .AddOperationalStore(options => options.ResolveDbContextOptions = (provider, optionsBuilder) => 
+                optionsBuilder.UseMainPersistence(Configuration, settings.Database))
             .AddInMemoryIdentityResources(Config.IdentityResources)
             .AddInMemoryApiScopes(Config.ApiScopes)
             .AddInMemoryClients(Config.Clients)

@@ -42,7 +42,7 @@ public class LoginService : ILoginService
             {
                 EnableLocalLogin = local,
                 ReturnUrl = returnUrl,
-                Username = context?.LoginHint,
+                Username = context.LoginHint,
             };
 
             if (!local)

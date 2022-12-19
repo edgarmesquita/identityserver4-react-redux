@@ -92,8 +92,7 @@ const Home = () => {
         event.preventDefault();
         if (!validate(form))
             return;
-
-        console.log(event)
+        
         const response = await window.fetch('/account/login', {
             method: 'POST',
             headers: {
@@ -152,28 +151,30 @@ const Home = () => {
                             fullWidth
                             required
                         />
-                        {loginInfo?.allowRememberLogin && (
-                            <FormControlLabel name="rememberLogin"
-                                              sx={{my: 1}}
-                                              value="true"
-                                              control={<Checkbox checked={form.rememberLogin || false}
-                                                                 onChange={handleCheckboxChange("rememberLogin")}/>}
-                                              label={<Typography variant="body2">Remember me.</Typography>}
-                                              labelPlacement="end"
-                            />
-                        )}
-                        <Link component={RouterLink} to="/forgot-password">
-                            Forgot password?
-                        </Link>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                            {loginInfo?.allowRememberLogin && (
+                                <FormControlLabel name="rememberLogin"
+                                                  sx={{my: 1}}
+                                                  value="true"
+                                                  control={<Checkbox checked={form.rememberLogin || false}
+                                                                     onChange={handleCheckboxChange("rememberLogin")}/>}
+                                                  label={<Typography variant="body2">Remember me.</Typography>}
+                                                  labelPlacement="end"
+                                />
+                            )}
+                            <Link component={RouterLink} to="/forgot-password">
+                                Forgot password?
+                            </Link>
+                        </Stack>
                         <Button type="submit"
                                 variant="contained"
                                 size="large"
                                 fullWidth sx={{mt: 2}}>
                             Sign In
                         </Button>
-                        
+
                         <Box sx={{
-                            display: 'flex', 
+                            display: 'flex',
                             alignItems: 'center',
                             margin: '16px 0',
                             '&::before': {
